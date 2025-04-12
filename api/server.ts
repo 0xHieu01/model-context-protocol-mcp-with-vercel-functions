@@ -20,6 +20,9 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_A
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
+// Hardcode the user ID for the hackathon prototype
+const FIXED_USER_ID = "00000000-0000-0000-0000-000000000000";
+
 const handler = initializeMcpApiHandler(
   (server) => {
     // Add more tools, resources, and prompts here
@@ -91,17 +94,16 @@ const handler = initializeMcpApiHandler(
 
     /**
      * Fetch today's journal entries for the user.
-     * @param {string} userId - The ID of the user.
      * @returns {Promise<Object[]>} - Array of journal entries.
      */
-    async function fetchTodaysJournalEntries(userId) {
+    async function fetchTodaysJournalEntries() {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("journal_entries_v2")
         .select(
           "id, content, mood_score, created_at, analysis_data, entry_emotions_v2(emotions(name)), entry_themes_v2(themes(name))"
         )
-        .eq("user_id", userId)
+        .eq("user_id", FIXED_USER_ID)
         .gte("created_at", today);
     
       if (error) {
@@ -114,15 +116,14 @@ const handler = initializeMcpApiHandler(
     
     /**
      * Fetch the latest mood score for the user.
-     * @param {string} userId - The ID of the user.
      * @returns {Promise<Object>} - Latest journal entry with mood score.
      */
-    async function fetchLatestMoodScore(userId) {
+    async function fetchLatestMoodScore() {
       const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("journal_entries_v2")
         .select("id, mood_score, created_at, analysis_data")
-        .eq("user_id", userId)
+        .eq("user_id", FIXED_USER_ID)
         .gte("created_at", today)
         .order("created_at", { ascending: false })
         .limit(1);
@@ -137,15 +138,14 @@ const handler = initializeMcpApiHandler(
     
     /**
      * Fetch weekly mood data for the user.
-     * @param {string} userId - The ID of the user.
      * @returns {Promise<Object[]>} - Array of mood data from the past week.
      */
-    async function fetchWeeklyMoodData(userId) {
+    async function fetchWeeklyMoodData() {
       const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("journal_entries_v2")
         .select("mood_score, created_at, analysis_data")
-        .eq("user_id", userId)
+        .eq("user_id", FIXED_USER_ID)
         .gte("created_at", sevenDaysAgo)
         .order("created_at", { ascending: false });
     
@@ -159,14 +159,13 @@ const handler = initializeMcpApiHandler(
     
     /**
      * Fetch all documents uploaded by the user.
-     * @param {string} userId - The ID of the user.
      * @returns {Promise<Object[]>} - Array of user documents.
      */
-    async function fetchUserDocuments(userId) {
+    async function fetchUserDocuments() {
       const { data, error } = await supabase
         .from("journal_documents")
         .select("id, file_name, file_type, public_url, parsed_content, status, created_at")
-        .eq("user_id", userId)
+        .eq("user_id", FIXED_USER_ID)
         .order("created_at", { ascending: false });
     
       if (error) {
@@ -181,13 +180,13 @@ const handler = initializeMcpApiHandler(
     server.tool(
       "fetchUserInsights",
       { userId: z.string() },
-      async ({ userId }) => {
+      async () => {
         try {
           const [journalEntries, latestMood, weeklyMood, documents] = await Promise.all([
-            fetchTodaysJournalEntries(userId),
-            fetchLatestMoodScore(userId),
-            fetchWeeklyMoodData(userId),
-            fetchUserDocuments(userId),
+            fetchTodaysJournalEntries(),
+            fetchLatestMoodScore(),
+            fetchWeeklyMoodData(),
+            fetchUserDocuments(),
           ]);
     
           return {
