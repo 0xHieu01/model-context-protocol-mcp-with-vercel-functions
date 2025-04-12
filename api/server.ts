@@ -14,7 +14,7 @@ const handler = initializeMcpApiHandler(
       content: [{ type: "text", text: `Tool echo: ${message}` }],
     }));
 
-    // New tool: moodEnhancer using LLM inference
+    // New tool: moodEnhancer using LLM inference with psychological counseling prompt
     server.tool(
       "moodEnhancer",
       { message: z.string() },
@@ -23,6 +23,10 @@ const handler = initializeMcpApiHandler(
           const chatCompletion = await openai.chat.completions.create({
             model: "solar-pro",
             messages: [
+              {
+                role: "system",
+                content: "You are a compassionate psychological counselor. Your role is to listen empathetically to the user, understand their feelings, and provide thoughtful suggestions or encouragement to help them feel better.",
+              },
               {
                 role: "user",
                 content: message,
@@ -52,7 +56,7 @@ const handler = initializeMcpApiHandler(
           description: "Echo a message",
         },
         moodEnhancer: {
-          description: "Enhance the user's mood by providing encouragement or suggestions using LLM inference",
+          description: "Enhance the user's mood by providing encouragement or suggestions using LLM inference with a psychological counseling approach",
         },
       },
     },
