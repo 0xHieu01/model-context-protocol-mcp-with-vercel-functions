@@ -13,6 +13,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.6.1",
     "content-type": "^1.0.5",
+    "openai": "^4.93.0",
     "raw-body": "^3.0.0",
     "redis": "^4.7.0",
     "zod": "^3.24.2"
