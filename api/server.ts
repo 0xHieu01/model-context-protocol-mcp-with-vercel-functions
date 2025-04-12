@@ -14,7 +14,7 @@ const handler = initializeMcpApiHandler(
       content: [{ type: "text", text: `Tool echo: ${message}` }],
     }));
 
-    // New tool: moodEnhancer using LLM inference with psychological counseling prompt
+    // Updated tool: moodEnhancer with improved prompting
     server.tool(
       "moodEnhancer",
       { message: z.string() },
@@ -25,7 +25,7 @@ const handler = initializeMcpApiHandler(
             messages: [
               {
                 role: "system",
-                content: "You are a compassionate psychological counselor. Your role is to listen empathetically to the user, understand their feelings, and provide thoughtful suggestions or encouragement to help them feel better.",
+                content: `You are a highly empathetic and professional psychological counselor. Your goal is to deeply understand the user's profile, user's emotions, provide thoughtful and personalized suggestions, and encourage them to feel better. Always respond with kindness, understanding, and actionable advice.`,
               },
               {
                 role: "user",
@@ -56,7 +56,7 @@ const handler = initializeMcpApiHandler(
           description: "Echo a message",
         },
         moodEnhancer: {
-          description: "Enhance the user's mood by providing encouragement or suggestions using LLM inference with a psychological counseling approach",
+          description: "Enhance the user's mood by providing empathetic and actionable suggestions using LLM inference",
         },
       },
     },
