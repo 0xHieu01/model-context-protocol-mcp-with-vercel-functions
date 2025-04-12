@@ -2,19 +2,16 @@ import { z } from "zod";
 import { initializeMcpApiHandler } from "../lib/mcp-api-handler";
 import OpenAI from "openai";
 import axios from "axios";
-
 const openai = new OpenAI({
   apiKey: process.env.UPSTAGE_API_KEY || "", // Ensure the key is loaded from the environment
   baseURL: "https://api.upstage.ai/v1",
 });
-
 const handler = initializeMcpApiHandler(
   (server) => {
     // Add more tools, resources, and prompts here
     server.tool("echo", { message: z.string() }, async ({ message }) => ({
       content: [{ type: "text", text: `Tool echo: ${message}` }],
     }));
-
     // Enhanced tool: moodEnhancer with user information integration
     server.tool(
       "moodEnhancer",
@@ -30,18 +27,14 @@ const handler = initializeMcpApiHandler(
               },
             }
           );
-
           const users = userResponse.data;
           const currentUser = users.find((user) => user.persona_id === userId);
-
           if (!currentUser) {
             return {
               content: [{ type: "text", text: "User not found. Please provide a valid user ID." }],
             };
           }
-
           const userInfo = `Hello ${currentUser.name}! It's great to connect with you. I see you're a ${currentUser.occupation} and have interests in ${currentUser.data.interests.slice(0, 3).join(", ")}. Let me know how I can assist you today.`;
-
           const actionableSuggestions = [
             "Consider trying a 10-minute meditation. Here's a link to a guided session",
             "Would you like me to help you book an appointment with a therapist?",
@@ -50,7 +43,6 @@ const handler = initializeMcpApiHandler(
             "Would you like to explore some mindfulness exercises?",
             "Consider reaching out to a friend or family member for support.",
           ];
-
           const chatCompletion = await openai.chat.completions.create({
             model: "solar-pro",
             messages: [
@@ -65,9 +57,7 @@ const handler = initializeMcpApiHandler(
             ],
             stream: false, // Disable streaming for simplicity
           });
-
           const response = chatCompletion.choices[0]?.message?.content || "I'm here to help!";
-
           return {
             content: [
               { type: "text", text: userInfo },
