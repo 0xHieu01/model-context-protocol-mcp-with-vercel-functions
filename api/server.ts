@@ -179,8 +179,7 @@ const handler = initializeMcpApiHandler(
     // Integrate these functions into the tools in the MCP server
     server.tool(
       "fetchUserInsights",
-      { userId: z.string() },
-      async () => {
+      async () => { // Removed the userId argument since it's not needed
         try {
           const [journalEntries, latestMood, weeklyMood, documents] = await Promise.all([
             fetchTodaysJournalEntries(),
