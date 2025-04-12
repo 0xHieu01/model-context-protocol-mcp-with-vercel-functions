@@ -1,5 +1,11 @@
 import { z } from "zod";
 import { initializeMcpApiHandler } from "../lib/mcp-api-handler";
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.UPSTAGE_API_KEY || "", // Ensure the key is loaded from the environment
+  baseURL: "https://api.upstage.ai/v1",
+});
 
 const handler = initializeMcpApiHandler(
   (server) => {
@@ -8,29 +14,34 @@ const handler = initializeMcpApiHandler(
       content: [{ type: "text", text: `Tool echo: ${message}` }],
     }));
 
-    // New tool: moodEnhancer
+    // New tool: moodEnhancer using LLM inference
     server.tool(
       "moodEnhancer",
       { message: z.string() },
       async ({ message }) => {
-        // Analyze the mood (basic example)
-        const positiveWords = ["happy", "great", "awesome", "good"];
-        const negativeWords = ["sad", "bad", "terrible", "down"];
-        let response = "I'm here to help!";
+        try {
+          const chatCompletion = await openai.chat.completions.create({
+            model: "solar-pro",
+            messages: [
+              {
+                role: "user",
+                content: message,
+              },
+            ],
+            stream: false, // Disable streaming for simplicity
+          });
 
-        if (positiveWords.some((word) => message.includes(word))) {
-          response = "That's wonderful to hear! Keep up the positivity!";
-        } else if (negativeWords.some((word) => message.includes(word))) {
-          response =
-            "I'm sorry you're feeling this way. Remember, tough times don't last. You're stronger than you think!";
-        } else {
-          response =
-            "Thank you for sharing. How about trying something new today to lift your mood?";
+          const response = chatCompletion.choices[0]?.message?.content || "I'm here to help!";
+
+          return {
+            content: [{ type: "text", text: response }],
+          };
+        } catch (error) {
+          console.error("Error with LLM inference:", error);
+          return {
+            content: [{ type: "text", text: "Sorry, I couldn't process your request at the moment." }],
+          };
         }
-
-        return {
-          content: [{ type: "text", text: response }],
-        };
       }
     );
   },
@@ -41,7 +52,7 @@ const handler = initializeMcpApiHandler(
           description: "Echo a message",
         },
         moodEnhancer: {
-          description: "Enhance the user's mood by providing encouragement or suggestions",
+          description: "Enhance the user's mood by providing encouragement or suggestions using LLM inference",
         },
       },
     },
